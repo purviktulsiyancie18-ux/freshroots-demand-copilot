@@ -15,6 +15,13 @@
       "when": 1792659856001,
       "tag": "0001_recommended_qty_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792664841264,
+      "tag": "0002_purchase_orders",
+      "breakpoints": true
     }
   ]
 }

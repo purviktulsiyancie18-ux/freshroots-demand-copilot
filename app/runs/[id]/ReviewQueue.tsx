@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -260,9 +261,22 @@ function OverrideModal({ r, reasonCodes, onClose, onSaved }: { r: Rec; reasonCod
   );
 }
 
-export function ReviewQueue({ run, recs, ctx, reasonCodes }: { run: RunInfo; recs: Rec[]; ctx: Ctx; reasonCodes: string[] }) {
+type PoInfo = { eligible: number; live: { id: number; poNumber: string; status: string }[] };
+
+export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo; recs: Rec[]; ctx: Ctx; reasonCodes: string[]; po: PoInfo }) {
   const router = useRouter();
   const toast = useToast();
+  const [creatingPos, setCreatingPos] = useState(false);
+
+  const createPoDrafts = async () => {
+    setCreatingPos(true);
+    const res = await fetch(`/api/runs/${run.id}/purchase-orders`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    setCreatingPos(false);
+    if (!res.ok) return toast(data.error ?? "Could not create PO drafts", "error");
+    toast(`${data.created.length} PO draft${data.created.length === 1 ? "" : "s"} created`);
+    router.refresh();
+  };
   const [tab, setTab] = useState<TabKey>(run.counts.needsJudgment > 0 ? "needs_judgment" : "standard");
   const [open, setOpen] = useState<number | null>(null);
   const [overriding, setOverriding] = useState<Rec | null>(null);
@@ -319,6 +333,20 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes }: { run: RunInfo; rec
             <Button variant="outline" onClick={approveStandard}>
               Approve all Standard ({pendingStandard})
             </Button>
+          )}
+          {po.eligible > 0 ? (
+            <Button variant="outline" onClick={createPoDrafts} disabled={creatingPos}>
+              {creatingPos ? "Creating…" : `Create PO drafts (${po.eligible} line${po.eligible === 1 ? "" : "s"})`}
+            </Button>
+          ) : po.live.length === 0 ? (
+            <Button variant="outline" disabled title="Approve or override at least one reorder SKU first">
+              Create PO drafts
+            </Button>
+          ) : null}
+          {po.live.length > 0 && (
+            <Link href="/purchase-orders" className="inline-flex h-9 items-center rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 hover:bg-slate-50">
+              View {po.live.length} PO draft{po.live.length === 1 ? "" : "s"}
+            </Link>
           )}
           {run.counts.exportable > 0 ? (
             <a href={`/api/runs/${run.id}/export`} className="inline-flex h-9 items-center rounded-md bg-emerald-700 px-4 text-sm font-medium text-white hover:bg-emerald-800">

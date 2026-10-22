@@ -209,3 +209,51 @@ export const aiCalls = pgTable("ai_calls", {
   error: text("error"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Draft purchase orders: one per distributor per run, built from approved/overridden reorders.
+// Fields mirror a Zoho Inventory purchase order so drafts can be pushed there later (lib/po/zoho.ts).
+export const purchaseOrders = pgTable(
+  "purchase_orders",
+  {
+    id: serial("id").primaryKey(),
+    poNumber: text("po_number").notNull().unique(),
+    runId: integer("run_id")
+      .notNull()
+      .references(() => runs.id),
+    distributorId: text("distributor_id")
+      .notNull()
+      .references(() => distributors.distributorId),
+    status: text("status").notNull().default("draft"), // draft | sent | cancelled
+    poDate: date("po_date").notNull(),
+    notes: text("notes"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    statusChangedBy: text("status_changed_by"),
+    statusChangedAt: timestamp("status_changed_at", { withTimezone: true }),
+    zohoPurchaseOrderId: text("zoho_purchaseorder_id"), // set once pushed to Zoho
+    zohoSyncedAt: timestamp("zoho_synced_at", { withTimezone: true }),
+  },
+  (t) => [index("po_run_idx").on(t.runId)],
+);
+
+export const purchaseOrderLines = pgTable(
+  "purchase_order_lines",
+  {
+    id: serial("id").primaryKey(),
+    purchaseOrderId: integer("purchase_order_id")
+      .notNull()
+      .references(() => purchaseOrders.id),
+    recommendationId: integer("recommendation_id")
+      .notNull()
+      .references(() => recommendations.id),
+    skuId: text("sku_id")
+      .notNull()
+      .references(() => skus.skuId),
+    skuName: text("sku_name").notNull(),
+    quantity: integer("quantity").notNull(),
+    uom: text("uom").notNull(),
+    finalAction: text("final_action").notNull(),
+    wasOverridden: boolean("was_overridden").notNull(),
+  },
+  (t) => [index("pol_po_idx").on(t.purchaseOrderId), index("pol_rec_idx").on(t.recommendationId)],
+);

@@ -32,7 +32,7 @@ npm install
 cp .env.example .env.local      # fill in the values
 npm run db:migrate              # creates tables + recommended_qty guard trigger
 npm run db:seed                 # loads /data/sample masters + rule_config defaults
-npm test                        # 42 tests incl. the §7.3 golden table
+npm test                        # 48 tests incl. the §7.3 golden table
 npm run dev
 ```
 
@@ -53,6 +53,16 @@ There is no login: anyone with the URL can use the app. Approvals, overrides and
 - **Messy SAP export:** `data/messy/freshroots_sap_export_messy.xlsx` (headers like `Item Code`, `Wk`, `Qty Sold`; ids like `sku 1`; weeks like `W42-2026`; `1,200`; `Yes/No`; `DD/MM/YYYY`) → identical results, ~520 fixes in the cleaning log. Regenerate with `npm run make:messy`.
 - **Invalid file:** `data/invalid/` (SKU099 in sales but not in sku_master) → `failed_validation`, row-level error (weekly_sales row 242), nothing written to clean tables.
 
+## PO drafts (Zoho-ready)
+
+After approving reorders, **Create PO drafts** on the review queue makes one draft purchase order per distributor from the approved and overridden reorder lines (pauses and no-action rows never become PO lines). `/purchase-orders` lists them; each PO has a printable view (Print / Save PDF), CSV download, and *Mark sent to procurement* / *Cancel draft*. Cancelling frees its lines for a new draft.
+
+Fields mirror a Zoho Inventory purchase order. `lib/po/zoho.ts` builds the exact `POST /inventory/v1/purchaseorders` body, and each PO page shows it with placeholder ids. Connecting Zoho later means adding OAuth credentials, looking up vendor/item ids, and storing the returned `zoho_purchaseorder_id`. Prices are not in the source data, so lines carry quantities only.
+
+## Demo data
+
+`npm run db:demo` **deletes all runs, uploads, decisions and POs**, then rebuilds an October 2026 history so every dashboard section has data. Each Mon/Thu run from 1 to 22 Oct goes through the real pipeline (including Gemini) with only the sales weeks available on that date. Raghav's approvals, 7 overrides and 12 PO drafts are recorded, with timestamps set to the run dates. The 22 Oct run is left open for review.
+
 ## Code map
 
 | Path | What |
@@ -62,7 +72,8 @@ There is no login: anyone with the URL can use the app. Approvals, overrides and
 | `lib/ai/` | Gemini wrapper (timeout + 1 retry + `ai_calls` logging), prompts, cleaning, forecast + final tag |
 | `lib/pipeline/` | `analyse.ts` (rules → AI → tag, no DB) and `execute.ts` (the run pipeline) |
 | `lib/queries.ts` | review queue, decisions, export, config, metrics |
-| `app/` | `/` dashboard · `/upload` · `/runs/[id]` review queue · `/settings/rules` · `/api/*` |
+| `lib/po/` | PO draft grouping, Zoho payload mapping, PO storage |
+| `app/` | `/` dashboard · `/upload` · `/runs/[id]` review queue · `/purchase-orders` · `/settings/rules` · `/api/*` |
 
 ## Decisions & deviations from the PRD
 

@@ -53,3 +53,6 @@ export function formatDateTime(d: string | Date | null | undefined) {
   if (!d) return "—";
   return new Date(d).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
 }
+
+export const PO_STATUS_LABEL: Record<string, string> = { draft: "Draft", sent: "Sent to procurement", cancelled: "Cancelled" };
+export const PO_STATUS_TONE: Record<string, Tone> = { draft: "amber", sent: "green", cancelled: "slate" };

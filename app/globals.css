@@ -9,3 +9,17 @@ body {
   background: #f8fafc;
   color: #0f172a;
 }
+
+@media print {
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
