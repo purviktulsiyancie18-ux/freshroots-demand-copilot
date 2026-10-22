@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -10,10 +10,8 @@ const LINKS = [
   { href: "/settings/rules", label: "Rules" },
 ];
 
-export function Nav({ user }: { user: string | null }) {
+export function Nav({ user }: { user: string }) {
   const pathname = usePathname();
-  const router = useRouter();
-  if (pathname === "/login") return null;
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-2.5">
@@ -31,21 +29,7 @@ export function Nav({ user }: { user: string | null }) {
             );
           })}
         </nav>
-        {user && (
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="hidden sm:inline">{user}</span>
-            <button
-              className="rounded-md px-2 py-1 text-slate-500 hover:bg-slate-100"
-              onClick={async () => {
-                await fetch("/api/logout", { method: "POST" });
-                router.push("/login");
-                router.refresh();
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        )}
+        <span className="hidden text-sm text-slate-600 sm:inline">{user} · Planner</span>
       </div>
     </header>
   );

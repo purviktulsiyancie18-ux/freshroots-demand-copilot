@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { handle } from "@/lib/api";
 import { getConfigRows, updateConfig } from "@/lib/queries";
-import { currentUser } from "@/lib/session";
+import { currentUser } from "@/lib/user";
 
 export async function GET() {
   return handle(() => getConfigRows());

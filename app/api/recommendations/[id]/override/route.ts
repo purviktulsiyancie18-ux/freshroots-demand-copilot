@@ -1,6 +1,6 @@
 import { handle, parseId } from "@/lib/api";
 import { OverrideBody, overrideRecommendation } from "@/lib/queries";
-import { currentUser } from "@/lib/session";
+import { currentUser } from "@/lib/user";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {

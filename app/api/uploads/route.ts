@@ -2,7 +2,7 @@ import { getDb, schema } from "@/lib/db";
 import { parseFiles } from "@/lib/data/parse";
 import { handle } from "@/lib/api";
 import { HttpError } from "@/lib/queries";
-import { currentUser } from "@/lib/session";
+import { currentUser } from "@/lib/user";
 
 // Receives the files, stages the parsed raw rows and creates the upload + run. The client then calls /execute.
 export async function POST(req: Request) {

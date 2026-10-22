@@ -36,7 +36,7 @@ npm test                        # 42 tests incl. the §7.3 golden table
 npm run dev
 ```
 
-Sign in at `/login` with any display name (recorded on approvals/overrides) and `APP_PASSWORD`.
+There is no login: anyone with the URL can use the app. Approvals, overrides and rule changes are recorded as **Raghav** (`lib/user.ts`), the single planner in PRD §3.
 
 ### Environment variables
 
@@ -46,8 +46,6 @@ Sign in at `/login` with any display name (recorded on approvals/overrides) and 
 | `GEMINI_API_KEY` | Google AI Studio key |
 | `GEMINI_MODEL` | default `gemini-3.8-flash` (see deviations) |
 | `GEMINI_THINKING_LEVEL` | optional, default `LOW` |
-| `APP_PASSWORD` | shared team password |
-| `SESSION_SECRET` | long random string for signing the session cookie |
 
 ## Try it
 
@@ -77,7 +75,8 @@ All of PRD §15 is followed. Changes:
 5. **Rules use merged history:** weekly sales are upserted into Neon. The rules see all stored weeks for the uploaded SKUs, anchored on the latest week. Missing weeks inside the 12-week window are excluded, and fewer than `min_history_weeks` present → Needs judgment.
 6. **Extra columns:** `uploads.raw_rows` (staged raw rows), `runs.completed_at` + `runs.summary`, `cleaning_log.sku_id`, `recommendations.ai_judgment_reason`, plus a `rule_config_log` table for the Settings change log.
 7. **Run completion:** a run is `completed` when no `pending` rows remain among SKUs that are flagged **or** tagged Needs judgment.
-8. **"Runs on time"** = distinct completed runs dated Monday/Thursday this month vs Mon/Thu slots elapsed.
+8. **No authentication:** the PRD's MVP password login (§11) was removed on request. Every decision is recorded as Raghav.
+9. **"Runs on time"** = distinct completed runs dated Monday/Thursday this month vs Mon/Thu slots elapsed.
 
 ## Deploy
 
