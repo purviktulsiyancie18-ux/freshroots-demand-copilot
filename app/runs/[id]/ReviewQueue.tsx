@@ -3,12 +3,13 @@
 import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClass } from "@/components/ui/button";
+import { CalendarDays, CheckCircle2, Download, FilePlus2, FileText, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Sparkline } from "@/components/Sparkline";
 import { useToast } from "@/components/Toast";
-import { ACTION_LABEL, FLAG_LABEL, FLAG_TONE, REASON_LABEL, TRIGGER_LABEL, fmt1, fmt2, formatDate, formatDateTime } from "@/lib/format";
+import { ACTION_LABEL, FLAG_COLOR, FLAG_LABEL, REASON_LABEL, TRIGGER_LABEL, fmt1, fmt2, formatDate, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type Rec = {
@@ -69,9 +70,10 @@ function Flags({ flags }: { flags: string[] }) {
   return (
     <div className="flex flex-wrap gap-1">
       {flags.map((f) => (
-        <Badge key={f} tone={FLAG_TONE[f] ?? "slate"}>
+        <span key={f} className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-slate-700 ring-1 ring-slate-200 ring-inset">
+          <span className="h-2 w-2 rounded-full" style={{ background: FLAG_COLOR[f] }} />
           {FLAG_LABEL[f] ?? f}
-        </Badge>
+        </span>
       ))}
     </div>
   );
@@ -283,6 +285,7 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
   const [busyId, setBusyId] = useState<number | null>(null);
   const rows = useMemo(() => recs.filter((r) => inTab(r, tab)), [recs, tab]);
   const pendingStandard = recs.filter((r) => r.finalTag === "STANDARD" && r.action !== "NO_ACTION" && r.status === "pending").length;
+  const reviewTotal = recs.filter((r) => r.flags.length > 0 || r.finalTag === "NEEDS_JUDGMENT").length;
   const counts = { needs_judgment: run.counts.needsJudgment, standard: run.counts.standard, no_action: run.counts.noAction, all: run.counts.total };
 
   const approve = async (r: Rec) => {
@@ -316,17 +319,31 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
     ) : null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="mb-1 text-[11px] font-semibold tracking-[0.14em] text-brand-700 uppercase">Review queue · Run #{run.id}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold">Review queue · {formatDate(run.runDate)}</h1>
-            {run.isFestival && <Badge tone="orange">Festival month · ×uplift applied</Badge>}
-            <Badge tone={run.status === "completed" ? "green" : "amber"}>{run.status === "completed" ? "Completed" : `${run.counts.pendingReview} to review`}</Badge>
+            <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+              <CalendarDays className="h-5 w-5 text-slate-400" />
+              {formatDate(run.runDate)}
+            </h1>
+            {run.isFestival && (
+              <Badge tone="orange">
+                <Sparkles className="h-3 w-3" /> Festival month · uplift applied
+              </Badge>
+            )}
+            {run.status === "completed" ? (
+              <Badge tone="green">
+                <CheckCircle2 className="h-3 w-3" /> Completed
+              </Badge>
+            ) : (
+              <Badge tone="amber" dot>
+                {run.counts.pendingReview} to review
+              </Badge>
+            )}
           </div>
-          <p className="mt-1 text-sm text-slate-500">
-            Run #{run.id} · {run.counts.flagged} of {run.counts.total} SKUs flagged · <span className="text-violet-700">{run.counts.needsJudgment} need judgment</span> · {run.counts.standard} standard · {run.counts.noAction} no action
-          </p>
+          <p className="mt-1 text-sm text-slate-500">Rules set every quantity. Approve or override; nothing reaches procurement without you.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {pendingStandard > 0 && (
@@ -336,6 +353,7 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
           )}
           {po.eligible > 0 ? (
             <Button variant="outline" onClick={createPoDrafts} disabled={creatingPos}>
+              <FilePlus2 className="h-4 w-4" />
               {creatingPos ? "Creating…" : `Create PO drafts (${po.eligible} line${po.eligible === 1 ? "" : "s"})`}
             </Button>
           ) : po.live.length === 0 ? (
@@ -344,13 +362,13 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
             </Button>
           ) : null}
           {po.live.length > 0 && (
-            <Link href="/purchase-orders" className="inline-flex h-9 items-center rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 hover:bg-slate-50">
-              View {po.live.length} PO draft{po.live.length === 1 ? "" : "s"}
+            <Link href="/purchase-orders" className={buttonClass("outline")}>
+              <FileText className="h-4 w-4" /> View {po.live.length} PO draft{po.live.length === 1 ? "" : "s"}
             </Link>
           )}
           {run.counts.exportable > 0 ? (
-            <a href={`/api/runs/${run.id}/export`} className="inline-flex h-9 items-center rounded-md bg-emerald-700 px-4 text-sm font-medium text-white hover:bg-emerald-800">
-              Export approved CSV ({run.counts.exportable})
+            <a href={`/api/runs/${run.id}/export`} className={buttonClass("default")}>
+              <Download className="h-4 w-4" /> Export approved CSV ({run.counts.exportable})
             </a>
           ) : (
             <Button disabled title="Approve at least one actionable SKU first">
@@ -360,16 +378,43 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
         </div>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-slate-200" role="tablist">
+      <Card className="grid grid-cols-2 divide-slate-100 p-1 sm:grid-cols-5 sm:divide-x">
+        {[
+          { label: "SKUs in run", value: run.counts.total },
+          { label: "Flagged by rules", value: run.counts.flagged },
+          { label: "Need judgment", value: run.counts.needsJudgment, accent: "text-violet-700" },
+          { label: "Standard", value: run.counts.standard },
+        ].map((s) => (
+          <div key={s.label} className="px-4 py-3">
+            <p className={cn("text-xl font-semibold", s.accent)}>{s.value}</p>
+            <p className="text-xs text-slate-500">{s.label}</p>
+          </div>
+        ))}
+        <div className="col-span-2 px-4 py-3 sm:col-span-1">
+          <div className="flex items-baseline justify-between">
+            <p className="text-xl font-semibold">{reviewTotal ? Math.round(((reviewTotal - run.counts.pendingReview) / reviewTotal) * 100) : 100}%</p>
+            <p className="text-[11px] text-slate-500 tabular-nums">
+              {reviewTotal - run.counts.pendingReview}/{reviewTotal}
+            </p>
+          </div>
+          <div className="mt-1.5 h-1.5 rounded-full bg-slate-100">
+            <div className="h-1.5 rounded-full bg-brand-600 transition-all" style={{ width: `${reviewTotal ? ((reviewTotal - run.counts.pendingReview) / reviewTotal) * 100 : 100}%` }} />
+          </div>
+          <p className="mt-1 text-xs text-slate-500">Reviewed</p>
+        </div>
+      </Card>
+
+      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-200/50 p-1 sm:w-fit" role="tablist">
         {TABS.map((t) => (
           <button
             key={t.key}
             role="tab"
             aria-selected={tab === t.key}
             onClick={() => setTab(t.key)}
-            className={cn("-mb-px border-b-2 px-3 py-2 text-sm whitespace-nowrap", tab === t.key ? "border-emerald-700 font-medium text-emerald-800" : "border-transparent text-slate-500 hover:text-slate-800")}
+            className={cn("flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition", tab === t.key ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900")}
           >
-            {t.label} <span className="ml-1 rounded-full bg-slate-100 px-1.5 text-xs tabular-nums text-slate-600">{counts[t.key]}</span>
+            {t.label}
+            <span className={cn("rounded-full px-1.5 text-[11px] tabular-nums", tab === t.key ? (t.key === "needs_judgment" ? "bg-violet-100 text-violet-700" : "bg-brand-50 text-brand-800") : "bg-white/70 text-slate-500")}>{counts[t.key]}</span>
           </button>
         ))}
       </div>
@@ -383,7 +428,7 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
           {/* Desktop table */}
           <Card className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs text-slate-500">
+              <thead className="border-b border-slate-100 bg-slate-50/70 text-left text-xs text-slate-500">
                 <tr>
                   <th className="px-3 py-2 font-medium">SKU</th>
                   <th className="px-3 py-2 font-medium">Flags</th>
@@ -400,7 +445,7 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
               <tbody>
                 {rows.map((r) => (
                   <Fragment key={r.id}>
-                    <tr className={cn("border-t border-slate-100 align-top", open === r.id && "bg-slate-50/60")}>
+                    <tr className={cn("border-t border-slate-100 align-top transition-colors hover:bg-slate-50/60", open === r.id && "bg-brand-50/40")}>
                       <td className="px-3 py-2.5">
                         <button className="text-left" onClick={() => setOpen(open === r.id ? null : r.id)} aria-expanded={open === r.id}>
                           <span className="mr-1 text-slate-400">{open === r.id ? "▾" : "▸"}</span>
@@ -474,7 +519,7 @@ export function ReviewQueue({ run, recs, ctx, reasonCodes, po }: { run: RunInfo;
                   <TagChips r={r} />
                   <div className="flex items-center justify-between pt-1">
                     {actions(r) ?? <span />}
-                    <button className="text-xs text-emerald-700" onClick={() => setOpen(open === r.id ? null : r.id)}>
+                    <button className="text-xs text-brand-700" onClick={() => setOpen(open === r.id ? null : r.id)}>
                       {open === r.id ? "Hide details" : "Details"}
                     </button>
                   </div>

@@ -30,7 +30,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
         )}
         <header className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-5">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-700 font-bold text-white">FR</span>
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand-700 font-bold text-white">FR</span>
             <div>
               <p className="font-semibold">Freshroots</p>
               <p className="text-xs text-slate-500">Maharashtra & Goa</p>
@@ -58,7 +58,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
             <p>{formatDate(p.poDate)}</p>
             <p className="text-xs text-slate-500">
               Planning run{" "}
-              <Link href={`/runs/${p.runId}`} className="no-print text-emerald-700 hover:underline">
+              <Link href={`/runs/${p.runId}`} className="no-print text-brand-700 hover:underline">
                 #{p.runId}
               </Link>
               <span className="hidden print:inline">#{p.runId}</span>

@@ -3,11 +3,33 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Brand */
+  --color-brand-950: #062a20;
+  --color-brand-900: #0b3b2e;
+  --color-brand-800: #0f4d3b;
+  --color-brand-700: #146b51;
+  --color-brand-600: #1b8a68;
+  --color-brand-100: #dcf2e8;
+  --color-brand-50: #eef8f3;
+  --color-saffron-500: #f2a531;
+  --color-saffron-100: #fdf0d9;
+  /* Flag series (validated categorical slots: blue, orange, aqua) */
+  --color-flag-overstock: #2a78d6;
+  --color-flag-stockout: #eb6834;
+  --color-flag-demand: #1baf7a;
 }
 
 body {
-  background: #f8fafc;
+  background:
+    radial-gradient(1200px 400px at 85% -120px, rgba(27, 138, 104, 0.08), transparent 70%),
+    radial-gradient(900px 300px at -10% -80px, rgba(242, 165, 49, 0.07), transparent 70%),
+    #f6f7f4;
+  background-attachment: fixed;
   color: #0f172a;
+}
+
+::selection {
+  background: #dcf2e8;
 }
 
 @media print {

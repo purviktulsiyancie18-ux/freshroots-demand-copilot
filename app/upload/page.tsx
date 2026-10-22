@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
+import { UploadCloud } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 type Issue = { level: string; sheet: string | null; row: number | null; column: string | null; message: string };
 type LogRow = { id: number; sheet: string | null; rowNum: number | null; columnName: string | null; before: string | null; after: string | null; fixType: string | null; level: string; message: string | null };
@@ -42,7 +44,7 @@ function Tracker({ status }: { status: string }) {
             <span
               className={cn(
                 "flex items-center gap-1.5 rounded-full px-3 py-1 font-medium",
-                state === "done" && "bg-emerald-50 text-emerald-800",
+                state === "done" && "bg-brand-50 text-brand-800",
                 state === "active" && "bg-blue-50 text-blue-800",
                 state === "failed" && "bg-red-50 text-red-700",
                 state === "todo" && "bg-slate-100 text-slate-500",
@@ -175,10 +177,11 @@ function UploadInner() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Upload & run</h1>
-        <p className="text-sm text-slate-500">Monday & Thursday: drop this week&apos;s SAP export. Gemini proposes cleaning fixes, code applies and validates them, the rules engine sets quantities.</p>
-      </div>
+      <PageHeader
+        eyebrow="Every Monday & Thursday"
+        title="Upload & run"
+        description="Drop this week's SAP export. Gemini proposes cleaning fixes, code applies and validates them, and the rules engine sets every quantity."
+      />
 
       {!runId && (
         <Card>
@@ -195,8 +198,14 @@ function UploadInner() {
                 addFiles(e.dataTransfer.files);
               }}
               onClick={() => inputRef.current?.click()}
-              className={cn("flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 text-center transition-colors", drag ? "border-emerald-600 bg-emerald-50" : "border-slate-300 hover:bg-slate-50")}
+              className={cn(
+                "group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 text-center transition-all",
+                drag ? "scale-[1.01] border-brand-600 bg-brand-50" : "border-slate-300 bg-slate-50/50 hover:border-brand-600/60 hover:bg-brand-50/40",
+              )}
             >
+              <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-white text-brand-700 shadow-sm ring-1 ring-slate-200 transition group-hover:-translate-y-0.5">
+                <UploadCloud className="h-6 w-6" />
+              </span>
               <p className="font-medium">Drag files here or click to choose</p>
               <p className="mt-1 text-sm text-slate-500">One .xlsx with 5 sheets, or 5 .csv files: sku_master, distributor_master, weekly_sales, current_inventory, calendar</p>
               <input ref={inputRef} type="file" multiple accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => addFiles(e.target.files)} />
@@ -284,18 +293,18 @@ function UploadInner() {
 
             {(run?.status === "ready_for_review" || run?.status === "completed") && (
               <div className="space-y-4">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="font-medium text-emerald-900">
+                <div className="rounded-lg border border-brand-100 bg-brand-50 p-4">
+                  <p className="font-medium text-brand-900">
                     {run.summary?.fixesApplied ?? applied.length} fixes applied, {run.summary?.warnings ?? 0} warning{run.summary?.warnings === 1 ? "" : "s"}
                     {run.summary?.missingWeeks ? `, ${run.summary.missingWeeks} missing week(s) excluded` : ""}.
                   </p>
-                  <p className="mt-1 text-sm text-emerald-800">
+                  <p className="mt-1 text-sm text-brand-800">
                     {run.summary?.flagged ?? "—"} of {run.summary?.skus ?? run.counts.total} SKUs flagged · {run.summary?.needsJudgment ?? "—"} need your judgment
                     {run.summary?.cleaningSource === "fallback" && " · Gemini cleaning unavailable, deterministic header matching used"}
                     {run.summary?.aiErrors?.length ? " · AI forecast unavailable for some SKUs (tagged Needs judgment)" : ""}
                   </p>
                 </div>
-                <Link href={`/runs/${runId}`} className="inline-flex h-11 items-center rounded-md bg-emerald-700 px-6 font-medium text-white hover:bg-emerald-800">
+                <Link href={`/runs/${runId}`} className="inline-flex h-11 items-center rounded-md bg-brand-700 px-6 font-medium text-white hover:bg-brand-800">
                   Open review queue →
                 </Link>
               </div>

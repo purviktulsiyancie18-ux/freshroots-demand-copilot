@@ -25,7 +25,7 @@ export function Sparkline({ sales, forecast, width = 360, height = 90 }: { sales
       </svg>
       <figcaption className="mt-1 flex gap-4 text-[11px] text-slate-500">
         <span>
-          <span className="mr-1 inline-block h-0.5 w-4 bg-emerald-700 align-middle" />
+          <span className="mr-1 inline-block h-0.5 w-4 bg-brand-700 align-middle" />
           Sales {sales[0]?.week} → {sales[sales.length - 1]?.week}
         </span>
         {forecast && (

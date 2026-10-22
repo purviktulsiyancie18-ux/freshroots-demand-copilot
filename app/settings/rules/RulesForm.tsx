@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/Toast";
 import { formatDateTime } from "@/lib/format";
+import { Info } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 type Row = { key: string; value: number; label: string; help: string; min: number; max: number; integer?: boolean; updatedBy: string | null; updatedAt: string | null };
 type Log = { id: number; key: string; oldValue: string | null; newValue: string; changedBy: string; changedAt: string };
@@ -29,11 +31,11 @@ export function RulesForm({ initial }: { initial: { rows: Row[]; log: Log[] } })
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold">Rule settings</h1>
-        <p className="text-sm text-slate-500">Raghav&apos;s documented rules. The rules engine — not the AI — uses these to set every reorder quantity.</p>
+      <PageHeader eyebrow="Settings" title="Rule settings" description="Raghav's documented rules. The rules engine, not the AI, uses these to set every reorder quantity." />
+      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-saffron-100/60 px-4 py-3 text-sm text-amber-900">
+        <Info className="mt-0.5 h-4 w-4 shrink-0" />
+        Changes apply from the next run. Existing runs keep the settings they ran with.
       </div>
-      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Changes apply from the next run. Existing runs keep the settings they ran with.</div>
       <Card>
         <CardContent className="divide-y divide-slate-100 pt-2">
           {initial.rows.map((r) => {

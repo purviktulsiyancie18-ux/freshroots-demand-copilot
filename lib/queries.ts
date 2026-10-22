@@ -403,3 +403,12 @@ export async function getMetrics() {
     latest: latest ? { ...latest, counts: latestCounts } : null,
   };
 }
+
+/** Where "Review queue" in the header points: the newest run awaiting review, else the newest reviewed run. */
+export async function getReviewTarget(): Promise<{ runId: number; pending: number } | null> {
+  const db = getDb();
+  const [open] = await db.select({ id: runs.id }).from(runs).where(eq(runs.status, "ready_for_review")).orderBy(desc(runs.id)).limit(1);
+  if (open) return { runId: open.id, pending: (await runCounts(open.id)).pendingReview };
+  const [done] = await db.select({ id: runs.id }).from(runs).where(eq(runs.status, "completed")).orderBy(desc(runs.id)).limit(1);
+  return done ? { runId: done.id, pending: 0 } : null;
+}

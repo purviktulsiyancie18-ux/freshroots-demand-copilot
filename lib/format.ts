@@ -56,3 +56,10 @@ export function formatDateTime(d: string | Date | null | undefined) {
 
 export const PO_STATUS_LABEL: Record<string, string> = { draft: "Draft", sent: "Sent to procurement", cancelled: "Cancelled" };
 export const PO_STATUS_TONE: Record<string, Tone> = { draft: "amber", sent: "green", cancelled: "slate" };
+
+// Same validated categorical slots as the dashboard flags chart.
+export const FLAG_COLOR: Record<string, string> = {
+  STOCKOUT_RISK: "var(--color-flag-stockout)",
+  OVERSTOCK_RISK: "var(--color-flag-overstock)",
+  HIGH_DEMAND: "var(--color-flag-demand)",
+};

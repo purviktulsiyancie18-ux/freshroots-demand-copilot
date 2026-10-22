@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClass } from "@/components/ui/button";
+import { Download, ExternalLink, Printer, Send } from "lucide-react";
 import { useToast } from "@/components/Toast";
 
 export function PoActions({ id, status, zohoUrl, zohoMissing }: { id: number; status: string; zohoUrl: string | null; zohoMissing: string[] }) {
@@ -33,14 +34,14 @@ export function PoActions({ id, status, zohoUrl, zohoMissing }: { id: number; st
   return (
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" onClick={() => window.print()}>
-        Print / Save PDF
+        <Printer className="h-3.5 w-3.5" /> Print / Save PDF
       </Button>
-      <a href={`/api/purchase-orders/${id}/csv`} className="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-800 hover:bg-slate-50">
-        Download CSV
+      <a href={`/api/purchase-orders/${id}/csv`} className={buttonClass("outline", "sm")}>
+        <Download className="h-3.5 w-3.5" /> Download CSV
       </a>
       {zohoUrl ? (
-        <a href={zohoUrl} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-md border border-emerald-300 bg-emerald-50 px-3 text-xs font-medium text-emerald-800 hover:bg-emerald-100">
-          Open in Zoho ↗
+        <a href={zohoUrl} target="_blank" rel="noreferrer" className={buttonClass("secondary", "sm")}>
+          <ExternalLink className="h-3.5 w-3.5" /> Open in Zoho
         </a>
       ) : status !== "cancelled" ? (
         <Button
@@ -50,7 +51,7 @@ export function PoActions({ id, status, zohoUrl, zohoMissing }: { id: number; st
           onClick={pushToZoho}
           title={zohoMissing.length ? `Zoho not connected yet — missing ${zohoMissing.join(", ")}` : "Create this PO as a draft in Zoho Inventory"}
         >
-          Push to Zoho
+          <Send className="h-3.5 w-3.5" /> Push to Zoho
         </Button>
       ) : null}
       {status === "draft" && (

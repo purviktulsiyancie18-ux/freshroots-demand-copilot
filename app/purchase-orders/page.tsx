@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { listPurchaseOrders } from "@/lib/po/store";
 import { PO_STATUS_LABEL, PO_STATUS_TONE, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -21,20 +22,21 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
   const count = (k: string) => (k ? all.filter((p) => p.status === k).length : all.length);
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">PO drafts</h1>
-        <p className="text-sm text-slate-500">One draft purchase order per distributor, built from the reorders Raghav approved. Procurement issues them; nothing is ordered automatically.</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Procurement"
+        title="PO drafts"
+        description="One draft purchase order per distributor, built from the reorders Raghav approved. Procurement issues them; nothing is ordered automatically."
+      />
 
-      <div className="flex gap-1 overflow-x-auto border-b border-slate-200">
+      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-slate-200/50 p-1 sm:w-fit">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
             href={f.key ? `/purchase-orders?status=${f.key}` : "/purchase-orders"}
-            className={cn("-mb-px border-b-2 px-3 py-2 text-sm whitespace-nowrap", status === f.key ? "border-emerald-700 font-medium text-emerald-800" : "border-transparent text-slate-500 hover:text-slate-800")}
+            className={cn("flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm whitespace-nowrap transition", status === f.key ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900")}
           >
-            {f.label} <span className="ml-1 rounded-full bg-slate-100 px-1.5 text-xs tabular-nums text-slate-600">{count(f.key)}</span>
+            {f.label} <span className="rounded-full bg-white/70 px-1.5 text-[11px] tabular-nums text-slate-500">{count(f.key)}</span>
           </Link>
         ))}
       </div>
@@ -43,7 +45,7 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
         <Card className="p-8 text-center text-sm text-slate-500">
           {all.length === 0 ? (
             <>
-              No PO drafts yet. Approve reorders in a <Link href="/" className="text-emerald-700 hover:underline">run&apos;s review queue</Link>, then click <b>Create PO drafts</b>.
+              No PO drafts yet. Approve reorders in a <Link href="/" className="text-brand-700 hover:underline">run&apos;s review queue</Link>, then click <b>Create PO drafts</b>.
             </>
           ) : (
             "No POs with this status."
@@ -53,7 +55,7 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
         <>
           <Card className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs text-slate-500">
+              <thead className="border-b border-slate-100 bg-slate-50/70 text-left text-xs text-slate-500">
                 <tr>
                   <th className="px-3 py-2 font-medium">PO number</th>
                   <th className="px-3 py-2 font-medium">Date</th>
@@ -66,9 +68,9 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
               </thead>
               <tbody>
                 {pos.map((p) => (
-                  <tr key={p.id} className="border-t border-slate-100">
+                  <tr key={p.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50/60">
                     <td className="px-3 py-2.5">
-                      <Link href={`/purchase-orders/${p.id}`} className="font-mono text-xs font-semibold text-emerald-700 hover:underline">
+                      <Link href={`/purchase-orders/${p.id}`} className="font-mono text-xs font-semibold text-brand-700 hover:underline">
                         {p.poNumber}
                       </Link>
                     </td>
@@ -102,7 +104,7 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
               <Link key={p.id} href={`/purchase-orders/${p.id}`} className="block">
                 <Card className="space-y-1 p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-mono text-xs font-semibold text-emerald-700">{p.poNumber}</span>
+                    <span className="font-mono text-xs font-semibold text-brand-700">{p.poNumber}</span>
                     <Badge tone={PO_STATUS_TONE[p.status] ?? "slate"}>{PO_STATUS_LABEL[p.status] ?? p.status}</Badge>
                   </div>
                   <p className="text-sm">{p.distributorName}</p>
