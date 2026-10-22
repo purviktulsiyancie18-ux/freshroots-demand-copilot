@@ -12,7 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/seed.ts",
     "make:messy": "tsx scripts/make-messy.ts",
-    "db:demo": "tsx scripts/seed-demo.ts"
+    "db:demo": "tsx scripts/seed-demo.ts",
+    "zoho:connect": "tsx scripts/zoho-connect.ts"
   },
   "dependencies": {
     "@google/genai": "^2.30.0",

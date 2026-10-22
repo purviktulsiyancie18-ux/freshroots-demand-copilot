@@ -19,7 +19,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
         <Link href="/purchase-orders" className="text-sm text-slate-500 hover:underline">
           ← All PO drafts
         </Link>
-        <PoActions id={p.id} status={p.status} />
+        <PoActions id={p.id} status={p.status} zohoUrl={p.zohoUrl} zohoMissing={p.zohoMissingSettings} />
       </div>
 
       <article className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-sm print:border-0 print:shadow-none sm:p-8">
@@ -127,7 +127,12 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
       </article>
 
       <details className="no-print rounded-xl border border-slate-200 bg-white p-4 text-sm">
-        <summary className="cursor-pointer font-medium text-slate-700">Zoho Inventory payload (ready for when Zoho is connected)</summary>
+        <summary className="cursor-pointer font-medium text-slate-700">
+          Zoho Inventory {p.zohoUrl ? "· pushed" : p.zohoMissingSettings.length ? "· not connected yet" : "· ready to push"}
+        </summary>
+        {p.zohoMissingSettings.length > 0 && (
+          <p className="mt-2 text-xs text-amber-700">Push to Zoho turns on once these settings are added: {p.zohoMissingSettings.join(", ")}.</p>
+        )}
         <p className="mt-2 text-xs text-slate-500">
           This is the body that would be sent to <code>POST /inventory/v1/purchaseorders</code>. The placeholders become real Zoho vendor and item ids once the account is linked.
         </p>

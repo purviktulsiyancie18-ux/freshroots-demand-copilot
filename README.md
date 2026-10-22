@@ -32,7 +32,7 @@ npm install
 cp .env.example .env.local      # fill in the values
 npm run db:migrate              # creates tables + recommended_qty guard trigger
 npm run db:seed                 # loads /data/sample masters + rule_config defaults
-npm test                        # 48 tests incl. the §7.3 golden table
+npm test                        # 52 tests incl. the §7.3 golden table
 npm run dev
 ```
 
@@ -57,7 +57,9 @@ There is no login: anyone with the URL can use the app. Approvals, overrides and
 
 After approving reorders, **Create PO drafts** on the review queue makes one draft purchase order per distributor from the approved and overridden reorder lines (pauses and no-action rows never become PO lines). `/purchase-orders` lists them; each PO has a printable view (Print / Save PDF), CSV download, and *Mark sent to procurement* / *Cancel draft*. Cancelling frees its lines for a new draft.
 
-Fields mirror a Zoho Inventory purchase order. `lib/po/zoho.ts` builds the exact `POST /inventory/v1/purchaseorders` body, and each PO page shows it with placeholder ids. Connecting Zoho later means adding OAuth credentials, looking up vendor/item ids, and storing the returned `zoho_purchaseorder_id`. Prices are not in the source data, so lines carry quantities only.
+**Push to Zoho** on a PO page creates it as a draft purchase order in Zoho Inventory (`lib/zoho/`). The vendor is matched by name and items by SKU; any that are missing are created from Freshroots master data, with a rate of 0 because prices aren't in the source data. The PO keeps its Freshroots number, the push is idempotent, and the page then links to the PO in Zoho. Each PO page also shows the exact request body.
+
+**Connecting Zoho:** the Self Client OAuth credentials (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`) are set up. The push stays disabled until `ZOHO_ORG_ID` exists. When this was built, Zoho refused to create any organization for the account (error 6063 in both Inventory and Books, through the web and the API), which needs Zoho support. Once an organization exists, run `npm run zoho:connect` and add the five `ZOHO_*` variables to Vercel.
 
 ## Demo data
 
@@ -73,6 +75,7 @@ Fields mirror a Zoho Inventory purchase order. `lib/po/zoho.ts` builds the exact
 | `lib/pipeline/` | `analyse.ts` (rules → AI → tag, no DB) and `execute.ts` (the run pipeline) |
 | `lib/queries.ts` | review queue, decisions, export, config, metrics |
 | `lib/po/` | PO draft grouping, Zoho payload mapping, PO storage |
+| `lib/zoho/` | Zoho Inventory OAuth client, vendor/item matching, PO push |
 | `app/` | `/` dashboard · `/upload` · `/runs/[id]` review queue · `/purchase-orders` · `/settings/rules` · `/api/*` |
 
 ## Decisions & deviations from the PRD

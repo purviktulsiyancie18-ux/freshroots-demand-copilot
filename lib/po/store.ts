@@ -5,6 +5,8 @@ import { getDb, schema } from "@/lib/db";
 import { HttpError } from "@/lib/queries";
 import { buildDraftPos, isPoLine, PO_ACTIONS, type EligibleLine } from "./build";
 import { zohoPreview } from "./zoho";
+import { ZohoClient, zohoConfigFromEnv, missingZohoSettings } from "@/lib/zoho/client";
+import { pushPurchaseOrder, zohoPoUrl } from "@/lib/zoho/push";
 
 const { purchaseOrders: po, purchaseOrderLines: pol, recommendations: rec, skus, distributors, runs } = schema;
 
@@ -125,6 +127,7 @@ export async function getPurchaseOrder(id: number) {
       statusChangedBy: po.statusChangedBy,
       statusChangedAt: po.statusChangedAt,
       zohoPurchaseOrderId: po.zohoPurchaseOrderId,
+      zohoSyncedAt: po.zohoSyncedAt,
     })
     .from(po)
     .innerJoin(distributors, eq(distributors.distributorId, po.distributorId))
@@ -150,7 +153,9 @@ export async function getPurchaseOrder(id: number) {
     .where(eq(pol.purchaseOrderId, id))
     .orderBy(asc(pol.skuId));
   const zoho = zohoPreview({ poNumber: header.poNumber, poDate: header.poDate, distributorId: header.distributorId, runId: header.runId, notes: header.notes, lines });
-  return { ...header, lines, totalUnits: lines.reduce((a, l) => a + l.quantity, 0), zoho };
+  const cfg = zohoConfigFromEnv();
+  const zohoUrl = cfg && header.zohoPurchaseOrderId ? zohoPoUrl(cfg.dc, cfg.orgId, header.zohoPurchaseOrderId) : null;
+  return { ...header, lines, totalUnits: lines.reduce((a, l) => a + l.quantity, 0), zoho, zohoUrl, zohoMissingSettings: missingZohoSettings() };
 }
 export type PoDetail = NonNullable<Awaited<ReturnType<typeof getPurchaseOrder>>>;
 
@@ -190,4 +195,21 @@ export async function purchaseOrdersCsv(ids: number[]): Promise<string> {
 export async function poCountsForRun(runId: number) {
   const pos = await listPurchaseOrders({ runId });
   return { live: pos.filter((p) => p.status !== "cancelled"), eligible: (await eligibleLines(runId)).length };
+}
+
+/** Sends a draft or sent PO to Zoho Inventory once; repeat calls return the existing Zoho PO. */
+export async function pushToZoho(id: number) {
+  const cfg = zohoConfigFromEnv();
+  if (!cfg) throw new HttpError(409, `Zoho is not connected yet (missing ${missingZohoSettings().join(", ")})`);
+  const p = await getPurchaseOrder(id);
+  if (!p) throw new HttpError(404, "PO not found");
+  if (p.status === "cancelled") throw new HttpError(409, "A cancelled PO cannot be sent to Zoho");
+  if (p.zohoPurchaseOrderId) return { alreadyPushed: true, zohoPurchaseOrderId: p.zohoPurchaseOrderId, url: p.zohoUrl };
+  try {
+    const r = await pushPurchaseOrder(new ZohoClient(cfg), { ...p, lines: p.lines });
+    await getDb().update(po).set({ zohoPurchaseOrderId: r.purchaseOrderId, zohoSyncedAt: new Date() }).where(eq(po.id, id));
+    return { alreadyPushed: false, zohoPurchaseOrderId: r.purchaseOrderId, url: zohoPoUrl(cfg.dc, cfg.orgId, r.purchaseOrderId), createdVendor: r.createdVendor, createdItems: r.createdItems };
+  } catch (e) {
+    throw new HttpError(502, e instanceof Error ? e.message : "Zoho request failed");
+  }
 }
