@@ -73,7 +73,7 @@ export default async function Dashboard() {
           sub={rate === null ? "No decided flagged SKUs yet · target < 25%, kill > 40%" : `${m.overrideCount} of ${m.overrideDecided} flagged decisions · target < 25%${rate > 0.4 ? " · ABOVE KILL THRESHOLD" : ""}`}
           tone={rateTone}
         />
-        <Metric label="Runs on time this month" value={`${m.runsOnTime} / ${m.scheduledSlots}`} sub="Completed runs dated Mon/Thu vs Mon/Thu slots so far" tone={m.runsOnTime >= m.scheduledSlots && m.scheduledSlots > 0 ? "green" : undefined} />
+        <Metric label="Runs completed this month" value={String(m.runsCompleted)} sub={`${m.runsOnSchedule} on scheduled Mon/Thu days · reviewed and closed`} />
         <Metric
           label="Median review time"
           value={m.medianReviewHours === null ? "—" : m.medianReviewHours < 1 ? `${Math.round(m.medianReviewHours * 60)} min` : `${m.medianReviewHours.toFixed(1)} h`}

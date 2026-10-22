@@ -349,18 +349,13 @@ export async function getMetrics() {
 
   const now = new Date();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  let slots = 0;
-  for (let d = new Date(monthStart); d <= now; d.setUTCDate(d.getUTCDate() + 1)) if ([1, 4].includes(d.getUTCDay())) slots++;
-  const [onTime] = await db
-    .select({ n: sql<number>`count(distinct ${runs.runDate})::int` })
+  const [monthRuns] = await db
+    .select({
+      completed: sql<number>`count(*)::int`,
+      onSchedule: sql<number>`(count(*) filter (where extract(isodow from ${runs.runDate}) in (1, 4)))::int`,
+    })
     .from(runs)
-    .where(
-      and(
-        eq(runs.status, "completed"),
-        gte(runs.runDate, monthStart.toISOString().slice(0, 10)),
-        sql`extract(isodow from ${runs.runDate}) in (1, 4)`,
-      ),
-    );
+    .where(and(eq(runs.status, "completed"), gte(runs.runDate, monthStart.toISOString().slice(0, 10))));
 
   const [median] = await db
     .select({
@@ -399,8 +394,8 @@ export async function getMetrics() {
     overrideRate,
     overrideDecided: ov.decided,
     overrideCount: ov.overridden,
-    runsOnTime: onTime.n,
-    scheduledSlots: slots,
+    runsCompleted: monthRuns.completed,
+    runsOnSchedule: monthRuns.onSchedule,
     medianReviewHours: median.hours === null ? null : Number(median.hours),
     completedRuns30d: median.n,
     flagTrend: flagTrend.reverse(),
