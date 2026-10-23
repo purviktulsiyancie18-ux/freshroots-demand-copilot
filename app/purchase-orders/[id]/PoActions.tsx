@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, Download, ExternalLink, Eye, Printer, Send, XCircle } from "lucide-react";
+import { Check, Download, ExternalLink, Eye, Printer, Send, XCircle } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui/button";
 import { useToast } from "@/components/Toast";
 import { cn } from "@/lib/utils";
@@ -42,17 +42,8 @@ export function PoActions({ id, status, zohoUrl, zohoMissing, compact }: Props) 
 
   if (compact) {
     const icon = "inline-grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent";
-    const zohoItem = zohoUrl
-      ? { label: "Open in Zoho", hint: "View this PO in Zoho Inventory", icon: ExternalLink, href: zohoUrl, external: true }
-      : {
-          label: "Push to Zoho",
-          hint: status === "cancelled" ? "Cancelled POs can't go to Zoho" : zohoMissing.length ? "Zoho not connected yet" : "Create it as a draft in Zoho Inventory",
-          icon: Send,
-          onSelect: pushToZoho,
-          disabled: status === "cancelled" || zohoMissing.length > 0,
-        };
     return (
-      <div className="flex items-center justify-end gap-0.5">
+      <div className="flex flex-wrap items-center justify-end gap-x-0.5 gap-y-2">
         <Link href={`/purchase-orders/${id}`} className={icon} title="View PO" aria-label="View PO">
           <Eye className="h-4 w-4" />
         </Link>
@@ -62,21 +53,38 @@ export function PoActions({ id, status, zohoUrl, zohoMissing, compact }: Props) 
         <button className={cn(icon, "hover:bg-red-50 hover:text-red-600")} onClick={cancel} disabled={busy || status !== "draft"} title={status === "draft" ? "Cancel draft" : "Only drafts can be cancelled"} aria-label="Cancel draft">
           <XCircle className="h-4 w-4" />
         </button>
-        <ActionsMenu
-          busy={busy}
-          primary={status === "draft"}
-          items={[
-            { label: "Print / Save PDF", hint: "Opens the PO and the print dialog", icon: Printer, href: `/purchase-orders/${id}?print=1` },
-            zohoItem,
-            {
-              label: "Mark sent to procurement",
-              hint: status === "draft" ? "Hand this PO to procurement" : status === "sent" ? "Already sent" : "Cancelled POs can't be sent",
-              icon: Check,
-              onSelect: markSent,
-              disabled: status !== "draft",
-            },
-          ]}
-        />
+        <span className="mx-1.5 hidden h-5 w-px bg-slate-200 md:block" aria-hidden />
+        <div className="flex items-center gap-1.5">
+          <Link href={`/purchase-orders/${id}?print=1`} className={buttonClass("outline", "sm")} title="Opens the PO and the print dialog">
+            <Printer className="h-3.5 w-3.5" /> Print
+          </Link>
+          {zohoUrl ? (
+            <a href={zohoUrl} target="_blank" rel="noreferrer" className={buttonClass("secondary", "sm", "w-[118px]")} title="View this PO in Zoho Inventory">
+              <ExternalLink className="h-3.5 w-3.5" /> Open in Zoho
+            </a>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-[118px]"
+              onClick={pushToZoho}
+              disabled={busy || status === "cancelled" || zohoMissing.length > 0}
+              title={status === "cancelled" ? "Cancelled POs can't go to Zoho" : zohoTitle}
+            >
+              <Send className="h-3.5 w-3.5" /> Push to Zoho
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant={status === "draft" ? "default" : "outline"}
+            className="w-[104px]"
+            onClick={markSent}
+            disabled={busy || status !== "draft"}
+            title={status === "draft" ? "Mark sent to procurement" : status === "sent" ? "Already sent" : "Cancelled POs can't be sent"}
+          >
+            <Check className="h-3.5 w-3.5" /> {status === "sent" ? "Sent" : "Mark sent"}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -124,89 +132,4 @@ export function AutoPrint({ enabled }: { enabled: boolean }) {
     return () => clearTimeout(t);
   }, [enabled, router]);
   return null;
-}
-
-type MenuItem = {
-  label: string;
-  hint: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href?: string;
-  external?: boolean;
-  onSelect?: () => void;
-  disabled?: boolean;
-};
-
-/** Primary row CTA: a dropdown rendered with fixed positioning so the scrolling table can't clip it. */
-function ActionsMenu({ items, busy, primary }: { items: MenuItem[]; busy: boolean; primary: boolean }) {
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
-  const btn = useRef<HTMLButtonElement>(null);
-  const menu = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!pos) return;
-    const close = (e: Event) => {
-      if (e.type === "keydown" && (e as KeyboardEvent).key !== "Escape") return;
-      if (e.type === "mousedown" && (menu.current?.contains(e.target as Node) || btn.current?.contains(e.target as Node))) return;
-      setPos(null);
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", close);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
-    menu.current?.querySelector<HTMLElement>("a,button:not(:disabled)")?.focus();
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", close);
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
-    };
-  }, [pos]);
-
-  const toggle = () => {
-    if (pos) return setPos(null);
-    const r = btn.current!.getBoundingClientRect();
-    setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
-  };
-
-  const row = "flex w-full items-start gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
-  return (
-    <>
-      <Button ref={btn} size="sm" variant={primary ? "default" : "outline"} className="ml-1.5 w-[104px]" onClick={toggle} disabled={busy} aria-haspopup="menu" aria-expanded={!!pos}>
-        Actions <ChevronDown className={cn("h-3.5 w-3.5 transition", pos && "rotate-180")} />
-      </Button>
-      {pos && (
-        <div ref={menu} role="menu" className="fixed z-50 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10" style={{ top: pos.top, right: pos.right }}>
-          {items.map((it) => {
-            const body = (
-              <>
-                <it.icon className="mt-0.5 h-4 w-4 shrink-0 text-brand-700" />
-                <span>
-                  <span className="block text-sm font-medium text-slate-900">{it.label}</span>
-                  <span className="block text-xs text-slate-500">{it.hint}</span>
-                </span>
-              </>
-            );
-            return it.href && !it.disabled ? (
-              <a key={it.label} role="menuitem" href={it.href} target={it.external ? "_blank" : undefined} rel={it.external ? "noreferrer" : undefined} className={row} onClick={() => setPos(null)}>
-                {body}
-              </a>
-            ) : (
-              <button
-                key={it.label}
-                role="menuitem"
-                className={row}
-                disabled={it.disabled || busy}
-                onClick={() => {
-                  setPos(null);
-                  it.onSelect?.();
-                }}
-              >
-                {body}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </>
-  );
 }
