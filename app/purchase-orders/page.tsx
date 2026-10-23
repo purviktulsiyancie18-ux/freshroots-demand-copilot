@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { listPurchaseOrders } from "@/lib/po/store";
+import { missingZohoSettings, zohoConfigFromEnv } from "@/lib/zoho/client";
+import { zohoPoUrl } from "@/lib/zoho/push";
+import { PoActions } from "./[id]/PoActions";
 import { PO_STATUS_LABEL, PO_STATUS_TONE, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/PageHeader";
@@ -20,6 +23,17 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
   const all = await listPurchaseOrders();
   const pos = status ? all.filter((p) => p.status === status) : all;
   const count = (k: string) => (k ? all.filter((p) => p.status === k).length : all.length);
+  const zoho = zohoConfigFromEnv();
+  const zohoMissing = missingZohoSettings();
+  const actions = (p: (typeof all)[number], compact = true) => (
+    <PoActions
+      id={p.id}
+      status={p.status}
+      zohoUrl={zoho && p.zohoPurchaseOrderId ? zohoPoUrl(zoho.dc, zoho.orgId, p.zohoPurchaseOrderId) : null}
+      zohoMissing={zohoMissing}
+      compact={compact}
+    />
+  );
 
   return (
     <div className="space-y-5">
@@ -64,6 +78,7 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
                   <th className="px-3 py-2 text-right font-medium">Units</th>
                   <th className="px-3 py-2 font-medium">Run</th>
                   <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,7 +108,9 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
                     </td>
                     <td className="px-3 py-2.5">
                       <Badge tone={PO_STATUS_TONE[p.status] ?? "slate"}>{PO_STATUS_LABEL[p.status] ?? p.status}</Badge>
+                      {p.zohoPurchaseOrderId && <span className="mt-1 block text-[11px] text-brand-700">In Zoho</span>}
                     </td>
+                    <td className="px-3 py-1.5">{actions(p)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -101,18 +118,20 @@ export default async function PurchaseOrdersPage({ searchParams }: { searchParam
           </Card>
           <div className="space-y-3 md:hidden">
             {pos.map((p) => (
-              <Link key={p.id} href={`/purchase-orders/${p.id}`} className="block">
-                <Card className="space-y-1 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="font-mono text-xs font-semibold text-brand-700">{p.poNumber}</span>
-                    <Badge tone={PO_STATUS_TONE[p.status] ?? "slate"}>{PO_STATUS_LABEL[p.status] ?? p.status}</Badge>
-                  </div>
-                  <p className="text-sm">{p.distributorName}</p>
-                  <p className="text-xs text-slate-500">
-                    {formatDate(p.poDate)} · {p.lineCount} lines · {p.totalUnits.toLocaleString("en-IN")} units
-                  </p>
-                </Card>
-              </Link>
+              <Card key={p.id} className="space-y-1 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <Link href={`/purchase-orders/${p.id}`} className="font-mono text-xs font-semibold text-brand-700">
+                    {p.poNumber}
+                  </Link>
+                  <Badge tone={PO_STATUS_TONE[p.status] ?? "slate"}>{PO_STATUS_LABEL[p.status] ?? p.status}</Badge>
+                </div>
+                <p className="text-sm">{p.distributorName}</p>
+                <p className="text-xs text-slate-500">
+                  {formatDate(p.poDate)} · {p.lineCount} lines · {p.totalUnits.toLocaleString("en-IN")} units
+                  {p.zohoPurchaseOrderId ? " · In Zoho" : ""}
+                </p>
+                <div className="-mx-1 border-t border-slate-100 pt-2">{actions(p)}</div>
+              </Card>
             ))}
           </div>
         </>

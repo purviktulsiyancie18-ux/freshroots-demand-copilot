@@ -99,6 +99,7 @@ export async function listPurchaseOrders(filter: { runId?: number; status?: stri
       lineCount: sql<number>`(select count(*)::int from ${pol} where ${pol.purchaseOrderId} = ${po.id})`,
       totalUnits: sql<number>`(select coalesce(sum(${pol.quantity}), 0)::int from ${pol} where ${pol.purchaseOrderId} = ${po.id})`,
       overriddenLines: sql<number>`(select count(*)::int from ${pol} where ${pol.purchaseOrderId} = ${po.id} and ${pol.wasOverridden})`,
+      zohoPurchaseOrderId: po.zohoPurchaseOrderId,
     })
     .from(po)
     .innerJoin(distributors, eq(distributors.distributorId, po.distributorId))

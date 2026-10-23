@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { getPurchaseOrder } from "@/lib/po/store";
 import { ACTION_LABEL, PO_STATUS_LABEL, PO_STATUS_TONE, REASON_LABEL, formatDate, formatDateTime } from "@/lib/format";
-import { PoActions } from "./PoActions";
+import { AutoPrint, PoActions } from "./PoActions";
 
 export const dynamic = "force-dynamic";
 
-export default async function PurchaseOrderPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PurchaseOrderPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ print?: string }> }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const p = await getPurchaseOrder(id);
@@ -15,6 +15,7 @@ export default async function PurchaseOrderPage({ params }: { params: Promise<{ 
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
+      <AutoPrint enabled={(await searchParams).print === "1"} />
       <div className="no-print flex flex-wrap items-center justify-between gap-2">
         <Link href="/purchase-orders" className="text-sm text-slate-500 hover:underline">
           ← All PO drafts
