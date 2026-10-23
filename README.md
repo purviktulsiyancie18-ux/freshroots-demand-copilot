@@ -59,7 +59,7 @@ After approving reorders, **Create PO drafts** on the review queue makes one dra
 
 **Push to Zoho** on a PO page creates it as a draft purchase order in Zoho Inventory (`lib/zoho/`). The vendor is matched by name and items by SKU; any that are missing are created from Freshroots master data, with a rate of 0 because prices aren't in the source data. The PO keeps its Freshroots number, the push is idempotent, and the page then links to the PO in Zoho. Each PO page also shows the exact request body.
 
-**Connecting Zoho:** the Self Client OAuth credentials (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`) are set up. The push stays disabled until `ZOHO_ORG_ID` exists. When this was built, Zoho refused to create any organization for the account (error 6063 in both Inventory and Books, through the web and the API), which needs Zoho support. Once an organization exists, run `npm run zoho:connect` and add the five `ZOHO_*` variables to Vercel.
+**Connecting Zoho:** a Self Client (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`, scope `ZohoInventory.FullAccess.all`) is linked to the Freshroots organization in Zoho Inventory (India). `npm run zoho:connect` looks up the organization and writes `ZOHO_ORG_ID`. Verified on 23 Oct 2026: PO-20261019-DIST001 was pushed as a Zoho draft with its vendor, items and planner quantities. The live site needs the five `ZOHO_*` variables in Vercel; the button stays disabled until they're set.
 
 ## Demo data
 
